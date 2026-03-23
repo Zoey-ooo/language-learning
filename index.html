@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#f5f3ef">
+<meta name="theme-color" content="#eef4ee">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="旅遊日語">
@@ -26,9 +26,9 @@
 */
 
 :root {
-  --bg:      #f5f3ef;
-  --bg2:     #edebe7;
-  --bg3:     #e2dfd9;
+  --bg:      #eef4ee;
+  --bg2:     #e4ede4;
+  --bg3:     #d5e8d5;
   --header:  #1c1c1c;
   --header2: #2a2a2a;
   --red:     #c0392b;
@@ -208,6 +208,15 @@ body {
   font-weight: 300;
   color: var(--ink2);
   line-height: 1.4;
+}
+
+.pc-en {
+  font-size: 11.5px;
+  font-weight: 300;
+  color: var(--ink3);
+  line-height: 1.4;
+  margin-top: 3px;
+  font-style: italic;
 }
 
 /* action bar */
@@ -426,48 +435,48 @@ body {
 
 <script>
 const DATA=[
-  {id:1,  jp:"5人です。",       sub:"（1人 / 2人 / 3人）",ro:"go.ni.n de.su\n(hi.to.ri / fu.ta.ri / sa.n.ni.n)",zh:"五個人。（一／二／三個人）",cat:"餐廳"},
-  {id:2,  jp:"何分待ちですか？", ro:"na.n.pu.n.ma.chi de.su ka?",  zh:"要等幾分鐘？",            cat:"餐廳"},
-  {id:3,  jp:"予約しました。",   ro:"yo.ya.ku shi.ma.shi.ta",       zh:"我預約了。",              cat:"餐廳"},
-  {id:4,  jp:"もう入れますか？", ro:"mô ha.i.re.ma.su ka?",         zh:"已經可以進去嗎？",        cat:"餐廳"},
-  {id:5,  jp:"どこの席ですか？", ro:"do.ko no se.ki de.su ka?",     zh:"位子在哪裡？",            cat:"餐廳"},
-  {id:6,  jp:"メニューをください。",ro:"me.nyû o ku.da.sa.i",       zh:"請給我菜單。",            cat:"餐廳"},
-  {id:7,  jp:"中国語のメニューありますか？",ro:"chû.go.ku.go no me.nyû a.ri.ma.su ka?",zh:"有中文的菜單嗎？",cat:"餐廳"},
-  {id:8,  jp:"お水をください。", ro:"o.mi.zu o ku.da.sa.i",         zh:"請給我水。",              cat:"餐廳"},
-  {id:9,  jp:"おしぼりをください。",ro:"o.shi.bo.ri o ku.da.sa.i", zh:"請給我濕紙巾。",          cat:"餐廳"},
-  {id:10, jp:"お皿をください。", ro:"o.sa.ra o ku.da.sa.i",         zh:"請給我盤子。",            cat:"餐廳"},
-  {id:11, jp:"注文したいです！", ro:"chû.mo.n shi.ta.i de.su!",     zh:"我想點餐！",              cat:"餐廳"},
-  {id:12, jp:"決まりました。",   ro:"ki.ma.ri.ma.shi.ta",           zh:"我決定好了。",            cat:"餐廳"},
-  {id:13, jp:"追加で注文したいです。",ro:"tsu.i.ka de chû.mo.n shi.ta.i de.su",zh:"我想要加點。",cat:"餐廳"},
-  {id:14, jp:"もう少し考えたいです。",ro:"mô su.ko.shi kan.ga.e.ta.i de.su",zh:"我再想一下。",    cat:"餐廳"},
-  {id:15, jp:"お勘定 お願いします！",ro:"o.ka.n.jô o.ne.ga.i shi.ma.su!",zh:"麻煩買單！",        cat:"餐廳"},
-  {id:16, jp:"お勘定は一階ですか？",ro:"o.ka.n.jô wa i.kka.i de.su ka?",zh:"買單在一樓嗎？",     cat:"餐廳"},
-  {id:17, jp:"レジはどちらですか？",ro:"re.ji wa do.chi.ra de.su ka?",zh:"收銀台在哪邊？",        cat:"餐廳"},
-  {id:18, jp:"全部でいくらですか？",ro:"ze.n.bu de i.ku.ra de.su ka?",zh:"總共多少錢？",           cat:"餐廳"},
-  {id:19, jp:"チェックインをお願いします。",ro:"che.kku.in o o.ne.ga.i shi.ma.su",zh:"麻煩幫我辦理入住。",cat:"飯店"},
-  {id:20, jp:"予約しています。", ro:"yo.ya.ku shi.te i.ma.su",      zh:"我有預約。",              cat:"飯店"},
-  {id:21, jp:"荷物を預けてもいいですか？",ro:"ni.mo.tsu o a.zu.ke.te.mo î de.su ka?",zh:"請問可以寄放行李嗎？",cat:"飯店"},
-  {id:22, jp:"部屋に荷物を預けたいです。",ro:"he.ya ni ni.mo.tsu o a.zu.ke.ta.i de.su",zh:"我想把行李寄放在房間。",cat:"飯店"},
-  {id:23, jp:"Wi-Fiのパスワードを教えてください。",ro:"wa.i.fa.i no pa.su.wâ.do o o.shi.e.te ku.da.sa.i",zh:"請告訴我Wi-Fi密碼。",cat:"飯店"},
-  {id:24, jp:"タオルをもう一枚ください。",ro:"ta.o.ru o mô i.chi.ma.i ku.da.sa.i",zh:"請再給我一條毛巾。",cat:"飯店"},
-  {id:25, jp:"部屋の鍵をなくしました。",ro:"he.ya no ka.gi o na.ku.shi.ma.shi.ta",zh:"我把房間鑰匙弄丟了。",cat:"飯店"},
-  {id:26, jp:"チケットを5枚ください。",sub:"ありがとうございます。",ro:"chi.ke.tto o go.ma.i ku.da.sa.i.\na.ri.ga.tô go.za.i.ma.su.",zh:"我要購買5張票，謝謝。",cat:"購物"},
-  {id:27, jp:"これはいくらですか？",ro:"ko.re wa i.ku.ra de.su ka?", zh:"這個多少錢？",           cat:"購物"},
-  {id:28, jp:"試着してもいいですか？",ro:"shi.cha.ku shi.te.mo î de.su ka?",zh:"可以試穿嗎？",    cat:"購物"},
-  {id:29, jp:"他の色はありますか？",ro:"ho.ka no i.ro wa a.ri.ma.su ka?",zh:"有其他顏色嗎？",     cat:"購物"},
-  {id:30, jp:"Lサイズはありますか？",ro:"e.ru.sa.i.zu wa a.ri.ma.su ka?",zh:"有L號嗎？",          cat:"購物"},
-  {id:31, jp:"これをください。",  ro:"ko.re o ku.da.sa.i",           zh:"我要買這個。",            cat:"購物"},
-  {id:32, jp:"袋はいりません。",  ro:"fu.ku.ro wa i.ri.ma.se.n",     zh:"不需要袋子。",            cat:"購物"},
-  {id:33, jp:"カードで払えますか？",ro:"kâ.do de ha.ra.e.ma.su ka?", zh:"可以刷卡嗎？",           cat:"購物"},
-  {id:34, jp:"免税になりますか？",ro:"me.n.ze.i ni na.ri.ma.su ka?", zh:"可以退稅嗎？",           cat:"購物"},
-  {id:35, jp:"ラッピングしてもらえますか？",ro:"ra.ppin.gu shi.te.mo.ra.e.ma.su ka?",zh:"可以幫我包裝嗎？",cat:"購物"},
-  {id:36, jp:"トイレはどこですか？",ro:"to.i.re wa do.ko de.su ka?", zh:"廁所在哪裡？",           cat:"問路"},
-  {id:37, jp:"お手洗いはどこですか？",ro:"o.te.a.ra.i wa do.ko de.su ka?",zh:"洗手間在哪裡？",    cat:"問路"},
-  {id:38, jp:"トイレは何階ですか？",ro:"to.i.re wa na.n.ka.i de.su ka?",zh:"廁所在幾樓？",        cat:"問路"},
-  {id:39, jp:"一番近くの駅はどこですか？",ro:"i.chi.ba.n chi.ka.ku no e.ki wa do.ko de.su ka?",zh:"最近的車站在哪裡？",cat:"問路"},
-  {id:40, jp:"新宿駅はどの辺ですか？",ro:"shi.n.ju.ku e.ki wa do.no.he.n de.su ka?",zh:"新宿車站在哪邊呢？",cat:"問路"},
-  {id:41, jp:"駅はどっちの方向ですか？",ro:"e.ki wa do.cchi no hô.kô de.su ka?",zh:"車站在哪個方向？",cat:"問路"},
-  {id:42, jp:"日本語がわかりません。",ro:"ni.ho.n.go ga wa.ka.ri.ma.se.n",zh:"我不會日文。",        cat:"問路"}
+  {id:1,  jp:"5人です。",       sub:"（1人 / 2人 / 3人）",ro:"go.ni.n de.su\n(hi.to.ri / fu.ta.ri / sa.n.ni.n)",zh:"五個人。（一／二／三個人）",en:"Table for five. (one / two / three)",cat:"餐廳"},
+  {id:2,  jp:"何分待ちですか？", ro:"na.n.pu.n.ma.chi de.su ka?",  zh:"要等幾分鐘？",            en:"How many minutes is the wait?",          cat:"餐廳"},
+  {id:3,  jp:"予約しました。",   ro:"yo.ya.ku shi.ma.shi.ta",       zh:"我預約了。",              en:"I have a reservation.",                  cat:"餐廳"},
+  {id:4,  jp:"もう入れますか？", ro:"mô ha.i.re.ma.su ka?",         zh:"已經可以進去嗎？",        en:"Can we be seated now?",                  cat:"餐廳"},
+  {id:5,  jp:"どこの席ですか？", ro:"do.ko no se.ki de.su ka?",     zh:"位子在哪裡？",            en:"Where is our table?",                    cat:"餐廳"},
+  {id:6,  jp:"メニューをください。",ro:"me.nyû o ku.da.sa.i",       zh:"請給我菜單。",            en:"May I have a menu, please?",             cat:"餐廳"},
+  {id:7,  jp:"中国語のメニューありますか？",ro:"chû.go.ku.go no me.nyû a.ri.ma.su ka?",zh:"有中文的菜單嗎？",en:"Do you have a menu in Chinese?",     cat:"餐廳"},
+  {id:8,  jp:"お水をください。", ro:"o.mi.zu o ku.da.sa.i",         zh:"請給我水。",              en:"Could I have some water, please?",       cat:"餐廳"},
+  {id:9,  jp:"おしぼりをください。",ro:"o.shi.bo.ri o ku.da.sa.i", zh:"請給我濕紙巾。",          en:"Could I have a wet towel, please?",      cat:"餐廳"},
+  {id:10, jp:"お皿をください。", ro:"o.sa.ra o ku.da.sa.i",         zh:"請給我盤子。",            en:"Could I have a plate, please?",          cat:"餐廳"},
+  {id:11, jp:"注文したいです！", ro:"chû.mo.n shi.ta.i de.su!",     zh:"我想點餐！",              en:"I'd like to order!",                     cat:"餐廳"},
+  {id:12, jp:"決まりました。",   ro:"ki.ma.ri.ma.shi.ta",           zh:"我決定好了。",            en:"I've decided.",                          cat:"餐廳"},
+  {id:13, jp:"追加で注文したいです。",ro:"tsu.i.ka de chû.mo.n shi.ta.i de.su",zh:"我想要加點。",en:"I'd like to add another order.",          cat:"餐廳"},
+  {id:14, jp:"もう少し考えたいです。",ro:"mô su.ko.shi kan.ga.e.ta.i de.su",zh:"我再想一下。",    en:"I need a little more time.",             cat:"餐廳"},
+  {id:15, jp:"お勘定 お願いします！",ro:"o.ka.n.jô o.ne.ga.i shi.ma.su!",zh:"麻煩買單！",        en:"Check, please!",                         cat:"餐廳"},
+  {id:16, jp:"お勘定は一階ですか？",ro:"o.ka.n.jô wa i.kka.i de.su ka?",zh:"買單在一樓嗎？",     en:"Do we pay on the first floor?",          cat:"餐廳"},
+  {id:17, jp:"レジはどちらですか？",ro:"re.ji wa do.chi.ra de.su ka?",zh:"收銀台在哪邊？",        en:"Where is the cashier?",                  cat:"餐廳"},
+  {id:18, jp:"全部でいくらですか？",ro:"ze.n.bu de i.ku.ra de.su ka?",zh:"總共多少錢？",           en:"How much is the total?",                 cat:"餐廳"},
+  {id:19, jp:"チェックインをお願いします。",ro:"che.kku.in o o.ne.ga.i shi.ma.su",zh:"麻煩幫我辦理入住。",en:"I'd like to check in, please.",      cat:"飯店"},
+  {id:20, jp:"予約しています。", ro:"yo.ya.ku shi.te i.ma.su",      zh:"我有預約。",              en:"I have a reservation.",                  cat:"飯店"},
+  {id:21, jp:"荷物を預けてもいいですか？",ro:"ni.mo.tsu o a.zu.ke.te.mo î de.su ka?",zh:"請問可以寄放行李嗎？",en:"Can I store my luggage here?",    cat:"飯店"},
+  {id:22, jp:"部屋に荷物を預けたいです。",ro:"he.ya ni ni.mo.tsu o a.zu.ke.ta.i de.su",zh:"我想把行李寄放在房間。",en:"I'd like to leave my bags in the room.",cat:"飯店"},
+  {id:23, jp:"Wi-Fiのパスワードを教えてください。",ro:"wa.i.fa.i no pa.su.wâ.do o o.shi.e.te ku.da.sa.i",zh:"請告訴我Wi-Fi密碼。",en:"Could you tell me the Wi-Fi password?",cat:"飯店"},
+  {id:24, jp:"タオルをもう一枚ください。",ro:"ta.o.ru o mô i.chi.ma.i ku.da.sa.i",zh:"請再給我一條毛巾。",en:"Could I have one more towel?",        cat:"飯店"},
+  {id:25, jp:"部屋の鍵をなくしました。",ro:"he.ya no ka.gi o na.ku.shi.ma.shi.ta",zh:"我把房間鑰匙弄丟了。",en:"I've lost my room key.",             cat:"飯店"},
+  {id:26, jp:"チケットを5枚ください。",sub:"ありがとうございます。",ro:"chi.ke.tto o go.ma.i ku.da.sa.i.\na.ri.ga.tô go.za.i.ma.su.",zh:"我要購買5張票，謝謝。",en:"Five tickets, please. Thank you.",      cat:"購物"},
+  {id:27, jp:"これはいくらですか？",ro:"ko.re wa i.ku.ra de.su ka?", zh:"這個多少錢？",           en:"How much is this?",                      cat:"購物"},
+  {id:28, jp:"試着してもいいですか？",ro:"shi.cha.ku shi.te.mo î de.su ka?",zh:"可以試穿嗎？",    en:"May I try this on?",                     cat:"購物"},
+  {id:29, jp:"他の色はありますか？",ro:"ho.ka no i.ro wa a.ri.ma.su ka?",zh:"有其他顏色嗎？",     en:"Do you have other colors?",              cat:"購物"},
+  {id:30, jp:"Lサイズはありますか？",ro:"e.ru.sa.i.zu wa a.ri.ma.su ka?",zh:"有L號嗎？",          en:"Do you have a size L?",                  cat:"購物"},
+  {id:31, jp:"これをください。",  ro:"ko.re o ku.da.sa.i",           zh:"我要買這個。",            en:"I'll take this one.",                    cat:"購物"},
+  {id:32, jp:"袋はいりません。",  ro:"fu.ku.ro wa i.ri.ma.se.n",     zh:"不需要袋子。",            en:"No bag needed, thank you.",              cat:"購物"},
+  {id:33, jp:"カードで払えますか？",ro:"kâ.do de ha.ra.e.ma.su ka?", zh:"可以刷卡嗎？",           en:"Can I pay by card?",                     cat:"購物"},
+  {id:34, jp:"免税になりますか？",ro:"me.n.ze.i ni na.ri.ma.su ka?", zh:"可以退稅嗎？",           en:"Is this tax-free?",                      cat:"購物"},
+  {id:35, jp:"ラッピングしてもらえますか？",ro:"ra.ppin.gu shi.te.mo.ra.e.ma.su ka?",zh:"可以幫我包裝嗎？",en:"Could you gift-wrap this?",           cat:"購物"},
+  {id:36, jp:"トイレはどこですか？",ro:"to.i.re wa do.ko de.su ka?", zh:"廁所在哪裡？",           en:"Where is the restroom?",                 cat:"問路"},
+  {id:37, jp:"お手洗いはどこですか？",ro:"o.te.a.ra.i wa do.ko de.su ka?",zh:"洗手間在哪裡？",    en:"Where is the washroom?",                 cat:"問路"},
+  {id:38, jp:"トイレは何階ですか？",ro:"to.i.re wa na.n.ka.i de.su ka?",zh:"廁所在幾樓？",        en:"Which floor is the restroom on?",        cat:"問路"},
+  {id:39, jp:"一番近くの駅はどこですか？",ro:"i.chi.ba.n chi.ka.ku no e.ki wa do.ko de.su ka?",zh:"最近的車站在哪裡？",en:"Where is the nearest station?",  cat:"問路"},
+  {id:40, jp:"新宿駅はどの辺ですか？",ro:"shi.n.ju.ku e.ki wa do.no.he.n de.su ka?",zh:"新宿車站在哪邊呢？",en:"Where is Shinjuku Station?",         cat:"問路"},
+  {id:41, jp:"駅はどっちの方向ですか？",ro:"e.ki wa do.cchi no hô.kô de.su ka?",zh:"車站在哪個方向？",en:"Which direction is the station?",      cat:"問路"},
+  {id:42, jp:"日本語がわかりません。",ro:"ni.ho.n.go ga wa.ka.ri.ma.se.n",zh:"我不會日文。",        en:"I don't understand Japanese.",           cat:"問路"}
 ];
 
 const CATS=['全部','餐廳','飯店','購物','問路'];
@@ -511,6 +520,7 @@ function card(p){
     <div class="pc-jp${lng?' lg':''}">${p.jp}${p.sub?`<span class="pc-jp-sub">${p.sub}</span>`:''}</div>
     <div class="pc-ro">${p.ro.replace(/\n/g,'<br>')}</div>
     <div class="pc-zh">${p.zh}</div>
+    <div class="pc-en">${p.en}</div>
   </div>
   <div class="pc-bar">
     <button class="pc-speak" onclick="doSpeak('${st}',this)">
