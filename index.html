@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -216,31 +216,44 @@ document.addEventListener('touchstart', unlockAudio, { once: true, passive: true
 function doSpeak(txt, btn) {
   if (!window.speechSynthesis) return;
 
-  // 停前一個
   if (activeBtn && activeBtn !== btn) activeBtn.classList.remove('on');
   window.speechSynthesis.cancel();
-
   activeBtn = btn;
   btn.classList.add('on');
 
-  const u = new SpeechSynthesisUtterance(txt);
-  u.lang  = 'ja-JP';
-  u.rate  = 0.85;
-  u.pitch = 1.0;
-  u.volume = 1.0;
+  function speak() {
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang   = 'ja-JP';
+    u.rate   = 0.85;
+    u.pitch  = 1.0;
+    u.volume = 1.0;
 
-  // 明確選取 ja-JP 語音（若系統有安裝）
+    // 強制選取 ja-JP 語音，排除任何 zh 開頭的語音
+    const voices = window.speechSynthesis.getVoices();
+    const jaVoice = voices.find(v => v.lang === 'ja-JP' && !v.lang.startsWith('zh'))
+                 || voices.find(v => v.lang.startsWith('ja'));
+    if (jaVoice) {
+      u.voice = jaVoice;
+    }
+
+    u.onend = u.onerror = () => {
+      btn.classList.remove('on');
+      if (activeBtn === btn) activeBtn = null;
+    };
+    window.speechSynthesis.speak(u);
+  }
+
+  // iOS 語音清單有時需要等一下才載入完成
   const voices = window.speechSynthesis.getVoices();
-  const jaVoice = voices.find(v => v.lang === 'ja-JP')
-               || voices.find(v => v.lang.startsWith('ja'));
-  if (jaVoice) u.voice = jaVoice;
-
-  u.onend = u.onerror = () => {
-    btn.classList.remove('on');
-    if (activeBtn === btn) activeBtn = null;
-  };
-
-  window.speechSynthesis.speak(u);
+  if (voices.length > 0) {
+    speak();
+  } else {
+    // 等語音清單載入後再播
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      speak();
+    };
+  }
 }
 
 // 預先載入語音清單（iOS 需要這個才能在首次點擊時找到 ja-JP）
