@@ -496,40 +496,55 @@ const CATS=['全部','餐廳','飯店','購物','問路','購票'];
 const CATJP={'全部':'すべて','餐廳':'食事','飯店':'ホテル','購物':'買物','問路':'道案内','購票':'切符'};
 let cur='全部', spBtn=null;
 
-function doSpeak(txt, btn){
-  if(!window.speechSynthesis) return;
+// ── 發音：使用 Google TTS，不依賴 iOS 系統語音包 ──
+// iOS Safari 限制：Audio 必須在 user-gesture 內 .play()
+// 策略：點擊時同步建立 Audio 物件並呼叫 play()，fetch 音檔同步進行
 
-  // iOS 必須完全同步，cancel + speak 全在同一 user-gesture callstack
-  window.speechSynthesis.cancel();
+let currentAudio = null;
+
+function doSpeak(txt, btn){
+  // 停止目前播放中的音檔
+  if(currentAudio){
+    currentAudio.pause();
+    currentAudio.src = '';
+    currentAudio = null;
+  }
   if(spBtn && spBtn !== btn) spBtn.classList.remove('on');
 
-  const u = new SpeechSynthesisUtterance(txt);
-  u.lang  = 'ja-JP';
-  u.rate  = 0.82;
-  u.pitch = 1.0;
+  // Google TTS endpoint — 免費、不需 API key、支援 ja 語言
+  const url = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=ja&client=tw-ob&q='
+              + encodeURIComponent(txt);
 
-  // 嘗試明確指定日文語音（iOS 上 getVoices() 在首次點擊後才會有資料）
-  const voices = window.speechSynthesis.getVoices();
-  if(voices.length){
-    const jaVoice = voices.find(v => v.lang === 'ja-JP')
-                 || voices.find(v => v.lang.startsWith('ja'));
-    if(jaVoice) u.voice = jaVoice;
-  }
+  const audio = new Audio();
+  audio.src = url;
+  currentAudio = audio;
 
   spBtn = btn;
   btn.classList.add('on');
-  u.onend  = () => btn.classList.remove('on');
-  u.onerror = () => btn.classList.remove('on');
 
-  // 完全同步呼叫，不用 rAF / setTimeout
-  window.speechSynthesis.speak(u);
+  audio.onended  = () => { btn.classList.remove('on'); currentAudio = null; };
+  audio.onerror  = () => {
+    btn.classList.remove('on');
+    currentAudio = null;
+    // Google TTS 失敗時（無網路），fallback 回 Web Speech API
+    fallbackSpeak(txt, btn);
+  };
+
+  // iOS Safari 要求 play() 必須在 user-gesture 內同步呼叫
+  audio.play().catch(() => fallbackSpeak(txt, btn));
 }
 
-// iOS 需要提前暖機：頁面載入後預先觸發一次 getVoices()
-// 讓系統在第一次點擊前就載入語音清單
-window.speechSynthesis.onvoiceschanged = () => {
-  window.speechSynthesis.getVoices();
-};
+function fallbackSpeak(txt, btn){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(txt);
+  u.lang  = 'ja-JP';
+  u.rate  = 0.82;
+  spBtn = btn;
+  btn.classList.add('on');
+  u.onend = u.onerror = () => btn.classList.remove('on');
+  window.speechSynthesis.speak(u);
+}
 
 function openFC(id){
   const p=DATA.find(x=>x.id===id); if(!p)return;
