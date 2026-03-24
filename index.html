@@ -483,24 +483,34 @@ const CATS=['全部','餐廳','飯店','購物','問路'];
 const CATJP={'全部':'すべて','餐廳':'食事','飯店':'ホテル','購物':'買物','問路':'道案内'};
 let cur='全部', spBtn=null;
 
-function doSpeak(txt,btn){
-  if(!window.speechSynthesis)return;
-  speechSynthesis.cancel();
-  if(spBtn&&spBtn!==btn)spBtn.classList.remove('on');
-  const u=new SpeechSynthesisUtterance(txt);
-  u.lang='ja-JP';
-  u.rate=0.85;
-  u.pitch=1.0;
-  const setVoice=()=>{
-    const voices=speechSynthesis.getVoices();
-    const ja=voices.find(v=>v.lang==='ja-JP')||voices.find(v=>v.lang.startsWith('ja'));
-    if(ja)u.voice=ja;
-    spBtn=btn; btn.classList.add('on');
-    u.onend=u.onerror=()=>btn.classList.remove('on');
-    speechSynthesis.speak(u);
-  };
-  if(speechSynthesis.getVoices().length)setVoice();
-  else speechSynthesis.addEventListener('voiceschanged',setVoice,{once:true});
+function doSpeak(txt, btn){
+  if(!window.speechSynthesis) return;
+
+  /* iOS Safari: cancel 必須在同一個 user-gesture stack 內，
+     speak() 也必須同步呼叫，不可放進 setTimeout / Promise */
+  window.speechSynthesis.cancel();
+
+  if(spBtn && spBtn !== btn) spBtn.classList.remove('on');
+
+  const u = new SpeechSynthesisUtterance(txt);
+
+  /* 直接設 lang，不設 voice —— iOS getVoices() 初次為空，
+     強制指定 voice 反而造成無聲；只設 lang='ja-JP' 最穩定 */
+  u.lang  = 'ja-JP';
+  u.rate  = 0.82;
+  u.pitch = 1.0;
+
+  spBtn = btn;
+  btn.classList.add('on');
+  u.onend  = () => btn.classList.remove('on');
+  u.onerror = () => btn.classList.remove('on');
+
+  /* iOS 偶發 bug：cancel 後立刻 speak 有時靜音，
+     用 requestAnimationFrame 讓瀏覽器清空佇列，
+     但仍在同一 user-gesture frame 內所以不會被 block */
+  window.requestAnimationFrame(() => {
+    window.speechSynthesis.speak(u);
+  });
 }
 
 function openFC(id){
@@ -522,8 +532,8 @@ function closeFC(){
 function chkOverlay(e){if(e.target===document.getElementById('overlay'))closeFC();}
 
 function card(p){
-  const lng=p.jp.length>15;
-  const st=p.jp.replace(/'/g,"\\'");
+  const lng = p.jp.length > 15;
+  const jpTxt = p.jp.replace(/"/g, '&quot;');
   return `<div class="pc">
   <div class="pc-body">
     <div class="pc-jp${lng?' lg':''}">${p.jp}${p.sub?`<span class="pc-jp-sub">${p.sub}</span>`:''}</div>
@@ -532,7 +542,7 @@ function card(p){
     <div class="pc-en">${p.en}</div>
   </div>
   <div class="pc-bar">
-    <button class="pc-speak" onclick="doSpeak('${st}',this)">
+    <button class="pc-speak" data-jp="${jpTxt}" onclick="doSpeak(this.dataset.jp,this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
