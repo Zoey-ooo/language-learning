@@ -277,11 +277,20 @@ function playJapanese(text) {
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = "ja-JP";
-  utter.rate = 0.9;
-  utter.pitch = 1.0;
+  utter.rate = 0.8;   // 較慢語速，清楚易懂
+  utter.pitch = 1.2;  // 稍高音調，偏向女聲
+
   const voices = window.speechSynthesis.getVoices();
-  const jaVoice = voices.find(v => v.lang.startsWith("ja"));
-  if (jaVoice) utter.voice = jaVoice;
+  const jaVoices = voices.filter(v => v.lang.startsWith("ja"));
+
+  // 優先順序：1) 名字含 female/woman/kyoko/haruka 2) 任何日文聲音
+  const femaleKeywords = ["female", "woman", "kyoko", "haruka", "mizuki", "nanami", "sakura", "otomi", "ichiro".replace("ichiro","")];
+  const femaleVoice = jaVoices.find(v =>
+    femaleKeywords.some(k => v.name.toLowerCase().includes(k))
+  );
+  const chosenVoice = femaleVoice || jaVoices[0];
+  if (chosenVoice) utter.voice = chosenVoice;
+
   window.speechSynthesis.speak(utter);
 }
 
