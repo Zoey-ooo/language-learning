@@ -499,32 +499,37 @@ let cur='全部', spBtn=null;
 function doSpeak(txt, btn){
   if(!window.speechSynthesis) return;
 
-  /* iOS Safari: cancel 必須在同一個 user-gesture stack 內，
-     speak() 也必須同步呼叫，不可放進 setTimeout / Promise */
+  // iOS 必須完全同步，cancel + speak 全在同一 user-gesture callstack
   window.speechSynthesis.cancel();
-
   if(spBtn && spBtn !== btn) spBtn.classList.remove('on');
 
   const u = new SpeechSynthesisUtterance(txt);
-
-  /* 直接設 lang，不設 voice —— iOS getVoices() 初次為空，
-     強制指定 voice 反而造成無聲；只設 lang='ja-JP' 最穩定 */
   u.lang  = 'ja-JP';
   u.rate  = 0.82;
   u.pitch = 1.0;
+
+  // 嘗試明確指定日文語音（iOS 上 getVoices() 在首次點擊後才會有資料）
+  const voices = window.speechSynthesis.getVoices();
+  if(voices.length){
+    const jaVoice = voices.find(v => v.lang === 'ja-JP')
+                 || voices.find(v => v.lang.startsWith('ja'));
+    if(jaVoice) u.voice = jaVoice;
+  }
 
   spBtn = btn;
   btn.classList.add('on');
   u.onend  = () => btn.classList.remove('on');
   u.onerror = () => btn.classList.remove('on');
 
-  /* iOS 偶發 bug：cancel 後立刻 speak 有時靜音，
-     用 requestAnimationFrame 讓瀏覽器清空佇列，
-     但仍在同一 user-gesture frame 內所以不會被 block */
-  window.requestAnimationFrame(() => {
-    window.speechSynthesis.speak(u);
-  });
+  // 完全同步呼叫，不用 rAF / setTimeout
+  window.speechSynthesis.speak(u);
 }
+
+// iOS 需要提前暖機：頁面載入後預先觸發一次 getVoices()
+// 讓系統在第一次點擊前就載入語音清單
+window.speechSynthesis.onvoiceschanged = () => {
+  window.speechSynthesis.getVoices();
+};
 
 function openFC(id){
   const p=DATA.find(x=>x.id===id); if(!p)return;
