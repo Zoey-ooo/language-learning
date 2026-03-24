@@ -487,11 +487,20 @@ function doSpeak(txt,btn){
   if(!window.speechSynthesis)return;
   speechSynthesis.cancel();
   if(spBtn&&spBtn!==btn)spBtn.classList.remove('on');
-  const u=new SpeechSynthesisUtterance(txt.replace(/\n/g,' '));
-  u.lang='ja-JP';u.rate=0.85;
-  spBtn=btn; btn.classList.add('on');
-  u.onend=u.onerror=()=>btn.classList.remove('on');
-  speechSynthesis.speak(u);
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang='ja-JP';
+  u.rate=0.85;
+  u.pitch=1.0;
+  const setVoice=()=>{
+    const voices=speechSynthesis.getVoices();
+    const ja=voices.find(v=>v.lang==='ja-JP')||voices.find(v=>v.lang.startsWith('ja'));
+    if(ja)u.voice=ja;
+    spBtn=btn; btn.classList.add('on');
+    u.onend=u.onerror=()=>btn.classList.remove('on');
+    speechSynthesis.speak(u);
+  };
+  if(speechSynthesis.getVoices().length)setVoice();
+  else speechSynthesis.addEventListener('voiceschanged',setVoice,{once:true});
 }
 
 function openFC(id){
@@ -514,7 +523,7 @@ function chkOverlay(e){if(e.target===document.getElementById('overlay'))closeFC(
 
 function card(p){
   const lng=p.jp.length>15;
-  const st=((p.sub?p.jp+' '+p.sub:p.jp)).replace(/'/g,"\\'").replace(/\n/g,' ');
+  const st=p.jp.replace(/'/g,"\\'");
   return `<div class="pc">
   <div class="pc-body">
     <div class="pc-jp${lng?' lg':''}">${p.jp}${p.sub?`<span class="pc-jp-sub">${p.sub}</span>`:''}</div>
