@@ -1,73 +1,277 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#F9FAFB" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="日語短語" />
+  <title>日本旅遊短語</title>
 
-// ── Data ────────────────────────────────────────────────────────────────────
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- React + Babel via CDN (no build needed) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F0F4F0;
+      --surface: #F9FAFB;
+      --card: #ffffff;
+      --border: #f1f5f9;
+      --border2: #e2e8f0;
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --accent: #86A789;
+      --accent-dark: #5a8f5d;
+      --accent-light: #f0f4f0;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: 'Noto Sans TC', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    #root { height: 100%; }
+
+    ::-webkit-scrollbar { display: none; }
+    * { scrollbar-width: none; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.9) translateY(16px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-enter { animation: slideUp 0.22s ease both; }
+    .card-enter:nth-child(1) { animation-delay: 0ms; }
+    .card-enter:nth-child(2) { animation-delay: 40ms; }
+    .card-enter:nth-child(3) { animation-delay: 80ms; }
+    .card-enter:nth-child(4) { animation-delay: 120ms; }
+    .card-enter:nth-child(5) { animation-delay: 160ms; }
+    .card-enter:nth-child(n+6) { animation-delay: 200ms; }
+
+    .phrase-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 18px 14px;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.055);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .phrase-card:active {
+      transform: scale(0.97);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .btn-play {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, transform 0.1s;
+      flex-shrink: 0;
+      background: var(--accent-light);
+      color: var(--text-primary);
+    }
+    .btn-play.playing { background: var(--accent); color: #fff; }
+    .btn-play:active { transform: scale(0.88); }
+
+    .btn-zoom {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border2);
+      background: #f8fafc;
+      cursor: pointer;
+      font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.1s;
+    }
+    .btn-zoom:active { transform: scale(0.88); }
+
+    .nav-btn {
+      flex: 1;
+      padding: 10px 4px 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      transition: transform 0.12s;
+      position: relative;
+    }
+    .nav-btn:active { transform: scale(0.88); }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      animation: fadeIn 0.18s ease;
+    }
+    .modal-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 40px 32px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.22);
+      text-align: center;
+      animation: scaleIn 0.22s cubic-bezier(0.34,1.4,0.64,1);
+    }
+
+    .search-box {
+      background: var(--card);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      transition: border-color 0.2s;
+    }
+    .search-box:focus-within { border-color: var(--accent); }
+    .search-box input {
+      flex: 1; border: none; background: transparent;
+      font-size: 15px; color: var(--text-primary);
+      font-family: inherit;
+      outline: none;
+    }
+    .search-box input::placeholder { color: var(--text-muted); }
+
+    .btn-modal-play {
+      margin-top: 28px;
+      padding: 13px 32px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 100px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: transform 0.12s, background 0.15s;
+      box-shadow: 0 4px 16px rgba(134,167,137,0.4);
+    }
+    .btn-modal-play:active { transform: scale(0.95); }
+    .btn-modal-play:hover { background: var(--accent-dark); }
+
+    .btn-close {
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      font-size: 13px; font-family: inherit;
+      margin-top: 16px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .btn-close:hover { background: #f1f5f9; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ── Data ─────────────────────────────────────────────────────────────────────
 const phrases = [
   // Restaurant
-  { id: 1, category: "restaurant", zh: "五個人。", jp: "5人です。", romaji: "go.nin de.su", en: "Table for five, please." },
-  { id: 2, category: "restaurant", zh: "我有預約。", jp: "予約しました。", romaji: "yo.ya.ku shi.ma.shi.ta", en: "I have a reservation." },
-  { id: 3, category: "restaurant", zh: "請給我菜單。", jp: "メニューをください。", romaji: "me.nyū o ku.da.sa.i", en: "May I have a menu, please?" },
-  { id: 4, category: "restaurant", zh: "有中文菜單嗎？", jp: "中国語のメニューはありますか？", romaji: "chū.go.ku.go no me.nyū wa a.ri.ma.su ka?", en: "Do you have a Chinese menu?" },
-  { id: 5, category: "restaurant", zh: "請給我水。", jp: "お水をください。", romaji: "o.mi.zu o ku.da.sa.i", en: "Could I have some water, please?" },
-  { id: 6, category: "restaurant", zh: "請給我盤子。", jp: "お皿をください。", romaji: "o.sa.ra o ku.da.sa.i", en: "Could I have a plate, please?" },
-  { id: 7, category: "restaurant", zh: "我要點餐！", jp: "注文をお願いします。", romaji: "chū.mon o o.ne.ga.i shi.ma.su", en: "I'd like to order, please." },
-  { id: 8, category: "restaurant", zh: "我想加點。", jp: "追加で注文したいです。", romaji: "tsu.i.ka de chū.mon shi.ta.i de.su", en: "I'd like to order something else." },
-  { id: 9, category: "restaurant", zh: "我再想一下。", jp: "もう少し考えたいです。", romaji: "mō su.ko.shi kan.ga.e.ta.i de.su", en: "I need a little more time." },
-  { id: 10, category: "restaurant", zh: "麻煩買單！", jp: "お勘定をお願いします！", romaji: "o.kan.jō o o.ne.ga.i shi.ma.su!", en: "Check, please!" },
-  { id: 11, category: "restaurant", zh: "買單在一樓嗎？", jp: "お勘定は一階ですか？", romaji: "o.kan.jō wa ik.kai de.su ka?", en: "Do we pay on the first floor?" },
-  { id: 12, category: "restaurant", zh: "收銀台在哪邊？", jp: "レジはどちらですか？", romaji: "re.ji wa do.chi.ra de.su ka?", en: "Where is the cashier?" },
-  { id: 13, category: "restaurant", zh: "總共多少錢？", jp: "全部でいくらですか？", romaji: "zen.bu de i.ku.ra de.su ka?", en: "How much is the total?" },
-  { id: 14, category: "restaurant", zh: "我要一份這個。", jp: "これを一つください。", romaji: "ko.re o hi.to.tsu ku.da.sa.i", en: "I'll have one of these." },
-  { id: 15, category: "restaurant", zh: "有推薦的嗎？", jp: "おすすめはありますか？", romaji: "o.su.su.me wa a.ri.ma.su ka?", en: "Do you have any recommendations?" },
-  { id: 16, category: "restaurant", zh: "麻煩幫我結帳。", jp: "お会計をお願いします。", romaji: "o.ka.i.ke.i o o.ne.ga.i shi.ma.su", en: "Check, please. / Bill, please." },
+  { id:1,  category:"restaurant",    zh:"五個人。",           jp:"5人です。",                             romaji:"go.nin de.su",                                   en:"Table for five, please." },
+  { id:2,  category:"restaurant",    zh:"我有預約。",          jp:"予約しました。",                         romaji:"yo.ya.ku shi.ma.shi.ta",                         en:"I have a reservation." },
+  { id:3,  category:"restaurant",    zh:"請給我菜單。",        jp:"メニューをください。",                   romaji:"me.nyū o ku.da.sa.i",                            en:"May I have a menu, please?" },
+  { id:4,  category:"restaurant",    zh:"有中文菜單嗎？",      jp:"中国語のメニューはありますか？",         romaji:"chū.go.ku.go no me.nyū wa a.ri.ma.su ka?",       en:"Do you have a Chinese menu?" },
+  { id:5,  category:"restaurant",    zh:"請給我水。",          jp:"お水をください。",                       romaji:"o.mi.zu o ku.da.sa.i",                           en:"Could I have some water, please?" },
+  { id:6,  category:"restaurant",    zh:"請給我盤子。",        jp:"お皿をください。",                       romaji:"o.sa.ra o ku.da.sa.i",                           en:"Could I have a plate, please?" },
+  { id:7,  category:"restaurant",    zh:"我要點餐！",          jp:"注文をお願いします。",                   romaji:"chū.mon o o.ne.ga.i shi.ma.su",                  en:"I'd like to order, please." },
+  { id:8,  category:"restaurant",    zh:"我想加點。",          jp:"追加で注文したいです。",                 romaji:"tsu.i.ka de chū.mon shi.ta.i de.su",             en:"I'd like to order something else." },
+  { id:9,  category:"restaurant",    zh:"我再想一下。",        jp:"もう少し考えたいです。",                 romaji:"mō su.ko.shi kan.ga.e.ta.i de.su",               en:"I need a little more time." },
+  { id:10, category:"restaurant",    zh:"麻煩買單！",          jp:"お勘定をお願いします！",                 romaji:"o.kan.jō o o.ne.ga.i shi.ma.su!",                en:"Check, please!" },
+  { id:11, category:"restaurant",    zh:"買單在一樓嗎？",      jp:"お勘定は一階ですか？",                   romaji:"o.kan.jō wa ik.kai de.su ka?",                   en:"Do we pay on the first floor?" },
+  { id:12, category:"restaurant",    zh:"收銀台在哪邊？",      jp:"レジはどちらですか？",                   romaji:"re.ji wa do.chi.ra de.su ka?",                   en:"Where is the cashier?" },
+  { id:13, category:"restaurant",    zh:"總共多少錢？",        jp:"全部でいくらですか？",                   romaji:"zen.bu de i.ku.ra de.su ka?",                    en:"How much is the total?" },
+  { id:14, category:"restaurant",    zh:"我要一份這個。",      jp:"これを一つください。",                   romaji:"ko.re o hi.to.tsu ku.da.sa.i",                   en:"I'll have one of these." },
+  { id:15, category:"restaurant",    zh:"有推薦的嗎？",        jp:"おすすめはありますか？",                 romaji:"o.su.su.me wa a.ri.ma.su ka?",                   en:"Do you have any recommendations?" },
+  { id:16, category:"restaurant",    zh:"麻煩幫我結帳。",      jp:"お会計をお願いします。",                 romaji:"o.ka.i.ke.i o o.ne.ga.i shi.ma.su",              en:"Check, please. / Bill, please." },
   // Accommodation
-  { id: 17, category: "accommodation", zh: "麻煩幫我辦理入住。", jp: "チェックインをお願いします", romaji: "che.k.ku i.n o o.ne.ga.i shi.ma.su", en: "I'd like to check in, please." },
-  { id: 18, category: "accommodation", zh: "麻煩幫我辦理退房。", jp: "チェックアウトをお願いします", romaji: "che.k.ku a.u.to o o.ne.ga.i shi.ma.su", en: "I'd like to check out, please." },
-  { id: 19, category: "accommodation", zh: "我有預約。", jp: "予約しています。", romaji: "yo.ya.ku shi.te i.ma.su", en: "I have a reservation." },
-  { id: 20, category: "accommodation", zh: "可以寄放行李嗎？", jp: "荷物を預けてもいいですか？", romaji: "ni.mo.tsu o a.zu.ke.te.mo ī de.su ka?", en: "Could you keep my luggage?" },
-  { id: 21, category: "accommodation", zh: "請告訴我Wi-Fi密碼。", jp: "Wi-Fiのパスワードを教えてください。", romaji: "wa.i.fa.i no pa.su.wā.do o o.shi.e.te ku.da.sa.i", en: "Could you tell me the Wi-Fi password?" },
-  { id: 22, category: "accommodation", zh: "請再給我一條毛巾。", jp: "タオルをもう一枚ください。", romaji: "ta.o.ru o mō i.chi.ma.i ku.da.sa.i", en: "Could I have one more towel?" },
-  { id: 23, category: "accommodation", zh: "我把房間鑰匙弄丟了。", jp: "部屋の鍵をなくしました。", romaji: "he.ya no ka.gi o na.ku.shi.ma.shi.ta", en: "I've lost my room key." },
-  { id: 24, category: "accommodation", zh: "附近有便利商店嗎？", jp: "近くにコンビニはありますか？", romaji: "chi.ka.ku ni kon.bi.ni wa a.ri.ma.su ka?", en: "Is there a convenience store nearby?" },
+  { id:17, category:"accommodation", zh:"麻煩幫我辦理入住。",  jp:"チェックインをお願いします",             romaji:"che.k.ku i.n o o.ne.ga.i shi.ma.su",             en:"I'd like to check in, please." },
+  { id:18, category:"accommodation", zh:"麻煩幫我辦理退房。",  jp:"チェックアウトをお願いします",           romaji:"che.k.ku a.u.to o o.ne.ga.i shi.ma.su",          en:"I'd like to check out, please." },
+  { id:19, category:"accommodation", zh:"我有預約。",          jp:"予約しています。",                       romaji:"yo.ya.ku shi.te i.ma.su",                        en:"I have a reservation." },
+  { id:20, category:"accommodation", zh:"可以寄放行李嗎？",    jp:"荷物を預けてもいいですか？",             romaji:"ni.mo.tsu o a.zu.ke.te.mo ī de.su ka?",          en:"Could you keep my luggage?" },
+  { id:21, category:"accommodation", zh:"請告訴我Wi-Fi密碼。", jp:"Wi-Fiのパスワードを教えてください。",    romaji:"wa.i.fa.i no pa.su.wā.do o o.shi.e.te ku.da.sa.i", en:"Could you tell me the Wi-Fi password?" },
+  { id:22, category:"accommodation", zh:"請再給我一條毛巾。",  jp:"タオルをもう一枚ください。",             romaji:"ta.o.ru o mō i.chi.ma.i ku.da.sa.i",             en:"Could I have one more towel?" },
+  { id:23, category:"accommodation", zh:"我把房間鑰匙弄丟了。",jp:"部屋の鍵をなくしました。",              romaji:"he.ya no ka.gi o na.ku.shi.ma.shi.ta",           en:"I've lost my room key." },
+  { id:24, category:"accommodation", zh:"附近有便利商店嗎？",  jp:"近くにコンビニはありますか？",           romaji:"chi.ka.ku ni kon.bi.ni wa a.ri.ma.su ka?",       en:"Is there a convenience store nearby?" },
   // Shopping
-  { id: 25, category: "shopping", zh: "這個多少錢？", jp: "これはいくらですか？", romaji: "ko.re wa i.ku.ra de.su ka?", en: "How much is this?" },
-  { id: 26, category: "shopping", zh: "可以試穿嗎？", jp: "試着してもいいですか？", romaji: "shi.cha.ku shi.te.mo ī de.su ka?", en: "May I try this on?" },
-  { id: 27, category: "shopping", zh: "有其他顏色嗎？", jp: "他の色はありますか？", romaji: "ho.ka no i.ro wa a.ri.ma.su ka?", en: "Do you have other colors?" },
-  { id: 28, category: "shopping", zh: "有L號嗎？", jp: "Lサイズはありますか？", romaji: "e.ru sa.i.zu wa a.ri.ma.su ka?", en: "Do you have a size L?" },
-  { id: 29, category: "shopping", zh: "我要買這個。", jp: "これをください。", romaji: "ko.re o ku.da.sa.i", en: "I'll take this one." },
-  { id: 30, category: "shopping", zh: "不需要袋子。", jp: "袋はいりません。", romaji: "fu.ku.ro wa i.ri.ma.sen", en: "No bag, thank you." },
-  { id: 31, category: "shopping", zh: "可以刷卡嗎？", jp: "カードで払えますか？", romaji: "kā.do de ha.ra.e.ma.su ka?", en: "Can I pay by card?" },
-  { id: 32, category: "shopping", zh: "可以免稅購買嗎？", jp: "免税になりますか？", romaji: "men.ze.i ni na.ri.ma.su ka?", en: "Is this tax-free?" },
-  { id: 33, category: "shopping", zh: "可以幫我包裝嗎？", jp: "ラッピングしてもらえますか？", romaji: "rap.pin.gu shi.te.mo.ra.e.ma.su ka?", en: "Could you gift-wrap this?" },
-  { id: 34, category: "shopping", zh: "請給我收據。", jp: "領収書をください。", romaji: "ryō.shū.sho o ku.da.sa.i", en: "May I have a receipt, please?" },
+  { id:25, category:"shopping",      zh:"這個多少錢？",        jp:"これはいくらですか？",                   romaji:"ko.re wa i.ku.ra de.su ka?",                     en:"How much is this?" },
+  { id:26, category:"shopping",      zh:"可以試穿嗎？",        jp:"試着してもいいですか？",                 romaji:"shi.cha.ku shi.te.mo ī de.su ka?",               en:"May I try this on?" },
+  { id:27, category:"shopping",      zh:"有其他顏色嗎？",      jp:"他の色はありますか？",                   romaji:"ho.ka no i.ro wa a.ri.ma.su ka?",                en:"Do you have other colors?" },
+  { id:28, category:"shopping",      zh:"有L號嗎？",           jp:"Lサイズはありますか？",                  romaji:"e.ru sa.i.zu wa a.ri.ma.su ka?",                 en:"Do you have a size L?" },
+  { id:29, category:"shopping",      zh:"我要買這個。",        jp:"これをください。",                       romaji:"ko.re o ku.da.sa.i",                             en:"I'll take this one." },
+  { id:30, category:"shopping",      zh:"不需要袋子。",        jp:"袋はいりません。",                       romaji:"fu.ku.ro wa i.ri.ma.sen",                        en:"No bag, thank you." },
+  { id:31, category:"shopping",      zh:"可以刷卡嗎？",        jp:"カードで払えますか？",                   romaji:"kā.do de ha.ra.e.ma.su ka?",                     en:"Can I pay by card?" },
+  { id:32, category:"shopping",      zh:"可以免稅購買嗎？",    jp:"免税になりますか？",                     romaji:"men.ze.i ni na.ri.ma.su ka?",                    en:"Is this tax-free?" },
+  { id:33, category:"shopping",      zh:"可以幫我包裝嗎？",    jp:"ラッピングしてもらえますか？",           romaji:"rap.pin.gu shi.te.mo.ra.e.ma.su ka?",            en:"Could you gift-wrap this?" },
+  { id:34, category:"shopping",      zh:"請給我收據。",        jp:"領収書をください。",                     romaji:"ryō.shū.sho o ku.da.sa.i",                       en:"May I have a receipt, please?" },
   // Directions
-  { id: 35, category: "directions", zh: "廁所在哪裡？", jp: "トイレはどこですか？", romaji: "to.i.re wa do.ko de.su ka?", en: "Where is the restroom?" },
-  { id: 36, category: "directions", zh: "洗手間在哪裡？", jp: "お手洗いはどこですか？", romaji: "o.te.a.ra.i wa do.ko de.su ka?", en: "Where is the restroom, please?" },
-  { id: 37, category: "directions", zh: "廁所在幾樓？", jp: "トイレは何階ですか？", romaji: "to.i.re wa nan.ka.i de.su ka?", en: "Which floor is the restroom on?" },
-  { id: 38, category: "directions", zh: "最近的車站在哪裡？", jp: "一番近くの駅はどこですか？", romaji: "i.chi.ban chi.ka.ku no e.ki wa do.ko de.su ka?", en: "Where is the nearest station?" },
-  { id: 39, category: "directions", zh: "新宿車站大概在哪邊？", jp: "新宿駅はどの辺ですか？", romaji: "shin.ju.ku e.ki wa do.no a.ta.ri de.su ka?", en: "Whereabouts is Shinjuku Station?" },
-  { id: 40, category: "directions", zh: "車站在哪個方向？", jp: "駅はどっちの方向ですか？", romaji: "e.ki wa dot.chi no hō.kō de.su ka?", en: "Which direction is the station?" },
-  { id: 41, category: "directions", zh: "我不會日文。", jp: "日本語がわかりません。", romaji: "ni.hon.go ga wa.ka.ri.ma.sen", en: "I don't understand Japanese." },
+  { id:35, category:"directions",    zh:"廁所在哪裡？",        jp:"トイレはどこですか？",                   romaji:"to.i.re wa do.ko de.su ka?",                     en:"Where is the restroom?" },
+  { id:36, category:"directions",    zh:"洗手間在哪裡？",      jp:"お手洗いはどこですか？",                 romaji:"o.te.a.ra.i wa do.ko de.su ka?",                 en:"Where is the restroom, please?" },
+  { id:37, category:"directions",    zh:"廁所在幾樓？",        jp:"トイレは何階ですか？",                   romaji:"to.i.re wa nan.ka.i de.su ka?",                  en:"Which floor is the restroom on?" },
+  { id:38, category:"directions",    zh:"最近的車站在哪裡？",  jp:"一番近くの駅はどこですか？",             romaji:"i.chi.ban chi.ka.ku no e.ki wa do.ko de.su ka?", en:"Where is the nearest station?" },
+  { id:39, category:"directions",    zh:"新宿車站大概在哪邊？",jp:"新宿駅はどの辺ですか？",                romaji:"shin.ju.ku e.ki wa do.no a.ta.ri de.su ka?",    en:"Whereabouts is Shinjuku Station?" },
+  { id:40, category:"directions",    zh:"車站在哪個方向？",    jp:"駅はどっちの方向ですか？",              romaji:"e.ki wa dot.chi no hō.kō de.su ka?",             en:"Which direction is the station?" },
+  { id:41, category:"directions",    zh:"我不會日文。",        jp:"日本語がわかりません。",                 romaji:"ni.hon.go ga wa.ka.ri.ma.sen",                   en:"I don't understand Japanese." },
   // Tickets
-  { id: 42, category: "tickets", zh: "五張大人票。", jp: "大人5枚ください。", romaji: "o.to.na go.ma.i ku.da.sa.i", en: "Five adult tickets, please." },
-  { id: 43, category: "tickets", zh: "下一班是幾點？", jp: "次の便は何時ですか？", romaji: "tsu.gi no bin wa nan.ji de.su ka?", en: "What time is the next departure?" },
-  { id: 44, category: "tickets", zh: "我想預訂對號座。", jp: "指定席を予約したいです。", romaji: "shi.te.i.se.ki o yo.ya.ku shi.ta.i de.su", en: "I'd like to reserve an assigned seat." },
-  { id: 45, category: "tickets", zh: "這班電車有停〇〇嗎？", jp: "この電車は〇〇に止まりますか？", romaji: "ko.no den.sha wa 〇〇 ni to.ma.ri.ma.su ka?", en: "Does this train stop at ○○?" },
-  { id: 46, category: "tickets", zh: "到〇〇一張票多少錢？", jp: "〇〇まで一枚いくらですか？", romaji: "〇〇 ma.de i.chi.ma.i i.ku.ra de.su ka?", en: "How much is one ticket to ○○?" },
-  { id: 47, category: "tickets", zh: "可以用IC卡搭乘嗎？", jp: "ICカードで乗れますか？", romaji: "a.i.shi.ī kā.do de no.re.ma.su ka?", en: "Can I use an IC card to ride?" },
-  { id: 48, category: "tickets", zh: "需要轉乘嗎？", jp: "乗り換えはありますか？", romaji: "no.ri.ka.e wa a.ri.ma.su ka?", en: "Do I need to transfer?" },
-  { id: 49, category: "tickets", zh: "是幾號月台？", jp: "何番線ですか？", romaji: "nan.ban.sen de.su ka?", en: "Which platform is it?" },
+  { id:42, category:"tickets",       zh:"五張大人票。",        jp:"大人5枚ください。",                      romaji:"o.to.na go.ma.i ku.da.sa.i",                     en:"Five adult tickets, please." },
+  { id:43, category:"tickets",       zh:"下一班是幾點？",      jp:"次の便は何時ですか？",                   romaji:"tsu.gi no bin wa nan.ji de.su ka?",               en:"What time is the next departure?" },
+  { id:44, category:"tickets",       zh:"我想預訂對號座。",    jp:"指定席を予約したいです。",               romaji:"shi.te.i.se.ki o yo.ya.ku shi.ta.i de.su",       en:"I'd like to reserve an assigned seat." },
+  { id:45, category:"tickets",       zh:"這班電車有停〇〇嗎？",jp:"この電車は〇〇に止まりますか？",        romaji:"ko.no den.sha wa 〇〇 ni to.ma.ri.ma.su ka?",    en:"Does this train stop at ○○?" },
+  { id:46, category:"tickets",       zh:"到〇〇一張票多少錢？",jp:"〇〇まで一枚いくらですか？",            romaji:"〇〇 ma.de i.chi.ma.i i.ku.ra de.su ka?",        en:"How much is one ticket to ○○?" },
+  { id:47, category:"tickets",       zh:"可以用IC卡搭乘嗎？",  jp:"ICカードで乗れますか？",                 romaji:"a.i.shi.ī kā.do de no.re.ma.su ka?",             en:"Can I use an IC card to ride?" },
+  { id:48, category:"tickets",       zh:"需要轉乘嗎？",        jp:"乗り換えはありますか？",                 romaji:"no.ri.ka.e wa a.ri.ma.su ka?",                   en:"Do I need to transfer?" },
+  { id:49, category:"tickets",       zh:"是幾號月台？",        jp:"何番線ですか？",                         romaji:"nan.ban.sen de.su ka?",                          en:"Which platform is it?" },
 ];
 
-// ── Constants ────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { id: "restaurant", label: "餐廳", icon: "🍜" },
-  { id: "accommodation", label: "住宿", icon: "🏨" },
-  { id: "tickets", label: "票務", icon: "🎫" },
-  { id: "directions", label: "問路", icon: "🗺️" },
-  { id: "shopping", label: "購物", icon: "🛍️" },
+  { id:"restaurant",    label:"餐廳", icon:"🍜" },
+  { id:"accommodation", label:"住宿", icon:"🏨" },
+  { id:"tickets",       label:"票務", icon:"🎫" },
+  { id:"directions",    label:"問路", icon:"🗺️" },
+  { id:"shopping",      label:"購物", icon:"🛍️" },
 ];
 
-// ── Speech ────────────────────────────────────────────────────────────────────
+// ── TTS ───────────────────────────────────────────────────────────────────────
 function playJapanese(text) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
@@ -75,175 +279,75 @@ function playJapanese(text) {
   utter.lang = "ja-JP";
   utter.rate = 0.9;
   utter.pitch = 1.0;
-
   const voices = window.speechSynthesis.getVoices();
-  const jaVoice = voices.find((v) => v.lang.startsWith("ja"));
+  const jaVoice = voices.find(v => v.lang.startsWith("ja"));
   if (jaVoice) utter.voice = jaVoice;
-
   window.speechSynthesis.speak(utter);
 }
 
-// ── FlashcardModal ────────────────────────────────────────────────────────────
+// ── Modal ─────────────────────────────────────────────────────────────────────
 function FlashcardModal({ phrase, onClose }) {
   useEffect(() => {
-    const handleKey = (e) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
+    const fn = e => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", fn);
+    return () => document.removeEventListener("keydown", fn);
   }, [onClose]);
 
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, zIndex: 100,
-        background: "rgba(15, 23, 42, 0.72)",
-        backdropFilter: "blur(8px)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "24px",
-        animation: "fadeIn 0.18s ease",
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#fff",
-          borderRadius: "24px",
-          padding: "40px 32px",
-          maxWidth: "440px",
-          width: "100%",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.22)",
-          textAlign: "center",
-          animation: "scaleIn 0.2s cubic-bezier(0.34,1.56,0.64,1)",
-        }}
-      >
-        {/* Show this to staff label */}
-        <p style={{ fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "#86A789", fontWeight: 600, marginBottom: "20px" }}>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-card" onClick={e => e.stopPropagation()}>
+        <p style={{ fontSize:11, letterSpacing:"0.12em", textTransform:"uppercase", color:"var(--accent)", fontWeight:600, marginBottom:20 }}>
           ↓ 請出示給工作人員 ↓
         </p>
-
-        {/* Big JP text */}
-        <p style={{ fontSize: "clamp(28px, 8vw, 48px)", fontWeight: 700, color: "#1e293b", lineHeight: 1.4, marginBottom: "20px", letterSpacing: "0.02em" }}>
+        <p style={{ fontSize:"clamp(26px,8vw,46px)", fontWeight:700, color:"var(--text-primary)", lineHeight:1.45, marginBottom:20, letterSpacing:"0.02em" }}>
           {phrase.jp}
         </p>
-
-        <div style={{ width: "40px", height: "2px", background: "#e2e8f0", margin: "0 auto 16px" }} />
-
-        <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "4px" }}>{phrase.romaji}</p>
-        <p style={{ fontSize: "15px", color: "#475569", marginBottom: "6px", fontWeight: 500 }}>{phrase.zh}</p>
-        <p style={{ fontSize: "13px", color: "#94a3b8" }}>{phrase.en}</p>
-
-        {/* Play button */}
-        <button
-          onClick={() => playJapanese(phrase.jp)}
-          style={{
-            marginTop: "28px",
-            padding: "12px 28px",
-            background: "#86A789",
-            color: "#fff",
-            border: "none",
-            borderRadius: "100px",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: "pointer",
-            letterSpacing: "0.04em",
-            display: "inline-flex", alignItems: "center", gap: "8px",
-          }}
-        >
-          <span>▶</span> 播放語音
-        </button>
-
-        <div style={{ marginTop: "20px" }}>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "13px" }}>
-            關閉 ✕
+        <div style={{ width:40, height:2, background:"var(--border2)", margin:"0 auto 16px" }} />
+        <p style={{ fontSize:13, color:"var(--text-muted)", marginBottom:5 }}>{phrase.romaji}</p>
+        <p style={{ fontSize:16, color:"var(--text-secondary)", fontWeight:500, marginBottom:5 }}>{phrase.zh}</p>
+        <p style={{ fontSize:13, color:"var(--text-muted)" }}>{phrase.en}</p>
+        <div>
+          <button className="btn-modal-play" onClick={() => playJapanese(phrase.jp)}>
+            <span>▶</span> 播放語音
           </button>
+        </div>
+        <div>
+          <button className="btn-close" onClick={onClose}>關閉 ✕</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ── PhraseCard ────────────────────────────────────────────────────────────────
+// ── Card ──────────────────────────────────────────────────────────────────────
 function PhraseCard({ phrase, onOpen }) {
   const [playing, setPlaying] = useState(false);
-  const [pressed, setPressed] = useState(false);
 
-  const handlePlay = (e) => {
+  const handlePlay = e => {
     e.stopPropagation();
     setPlaying(true);
     playJapanese(phrase.jp);
-    setTimeout(() => setPlaying(false), 2000);
+    setTimeout(() => setPlaying(false), 2200);
   };
 
   return (
-    <div
-      onClick={() => onOpen(phrase)}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
-      onMouseLeave={() => setPressed(false)}
-      onTouchStart={() => setPressed(true)}
-      onTouchEnd={() => setPressed(false)}
-      style={{
-        background: "#fff",
-        border: "1px solid #f1f5f9",
-        borderRadius: "16px",
-        padding: "18px 18px 14px",
-        cursor: "pointer",
-        transition: "transform 0.12s ease, box-shadow 0.12s ease",
-        transform: pressed ? "scale(0.97)" : "scale(1)",
-        boxShadow: pressed ? "0 1px 4px rgba(0,0,0,0.06)" : "0 2px 12px rgba(0,0,0,0.06)",
-        userSelect: "none",
-      }}
-    >
-      {/* Main JP text */}
-      <p style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b", marginBottom: "6px", lineHeight: 1.4 }}>
+    <div className="phrase-card card-enter" onClick={() => onOpen(phrase)}>
+      <p style={{ fontSize:20, fontWeight:700, color:"var(--text-primary)", marginBottom:5, lineHeight:1.4 }}>
         {phrase.jp}
       </p>
-
-      {/* Romaji */}
-      <p style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "8px", letterSpacing: "0.04em" }}>
+      <p style={{ fontSize:11, color:"var(--text-muted)", marginBottom:10, letterSpacing:"0.04em" }}>
         {phrase.romaji}
       </p>
-
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-        <div>
-          <p style={{ fontSize: "14px", fontWeight: 600, color: "#475569", marginBottom: "2px" }}>{phrase.zh}</p>
-          <p style={{ fontSize: "12px", color: "#94a3b8" }}>{phrase.en}</p>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
+        <div style={{ minWidth:0 }}>
+          <p style={{ fontSize:14, fontWeight:600, color:"var(--text-secondary)", marginBottom:2 }}>{phrase.zh}</p>
+          <p style={{ fontSize:12, color:"var(--text-muted)" }}>{phrase.en}</p>
         </div>
-
-        <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-          {/* Play button */}
-          <button
-            onClick={handlePlay}
-            title="播放語音"
-            style={{
-              width: "38px", height: "38px",
-              borderRadius: "50%",
-              background: playing ? "#86A789" : "#f0f4f0",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "14px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "background 0.2s",
-              flexShrink: 0,
-            }}
-          >
+        <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+          <button className={`btn-play${playing ? " playing" : ""}`} onClick={handlePlay} title="播放語音">
             {playing ? "🔊" : "▶"}
           </button>
-          {/* Zoom hint */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onOpen(phrase); }}
-            title="全螢幕顯示"
-            style={{
-              width: "38px", height: "38px",
-              borderRadius: "50%",
-              background: "#f8fafc",
-              border: "1px solid #e2e8f0",
-              cursor: "pointer",
-              fontSize: "15px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
+          <button className="btn-zoom" onClick={e => { e.stopPropagation(); onOpen(phrase); }} title="全螢幕顯示">
             ⛶
           </button>
         </div>
@@ -252,118 +356,90 @@ function PhraseCard({ phrase, onOpen }) {
   );
 }
 
-// ── Main App ──────────────────────────────────────────────────────────────────
-export default function App() {
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
   const [activeCategory, setActiveCategory] = useState("restaurant");
   const [query, setQuery] = useState("");
   const [modalPhrase, setModalPhrase] = useState(null);
   const [listKey, setListKey] = useState(0);
-  const searchRef = useRef(null);
 
-  // Preload voices
   useEffect(() => {
     window.speechSynthesis?.getVoices();
     window.speechSynthesis?.addEventListener?.("voiceschanged", () => window.speechSynthesis.getVoices());
   }, []);
 
-  const handleCategoryChange = useCallback((cat) => {
+  const handleCategoryChange = useCallback(cat => {
     setActiveCategory(cat);
     setQuery("");
-    setListKey((k) => k + 1);
+    setListKey(k => k + 1);
   }, []);
 
-  const filtered = phrases.filter((p) => {
-    const matchCat = p.category === activeCategory;
-    if (!query) return matchCat;
+  const filtered = phrases.filter(p => {
+    if (p.category !== activeCategory) return false;
+    if (!query) return true;
     const q = query.toLowerCase();
-    return matchCat && (p.zh.includes(q) || p.jp.includes(q) || p.en.toLowerCase().includes(q) || p.romaji.toLowerCase().includes(q));
+    return p.zh.includes(q) || p.jp.includes(q) ||
+           p.en.toLowerCase().includes(q) || p.romaji.toLowerCase().includes(q);
   });
 
-  const activeCat = CATEGORIES.find((c) => c.id === activeCategory);
+  const activeCat = CATEGORIES.find(c => c.id === activeCategory);
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #F0F4F0; font-family: 'Noto Sans TC', sans-serif; -webkit-font-smoothing: antialiased; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        .card-list > * { animation: slideUp 0.22s ease both; }
-        .card-list > *:nth-child(1) { animation-delay: 0ms; }
-        .card-list > *:nth-child(2) { animation-delay: 35ms; }
-        .card-list > *:nth-child(3) { animation-delay: 70ms; }
-        .card-list > *:nth-child(4) { animation-delay: 105ms; }
-        .card-list > *:nth-child(5) { animation-delay: 140ms; }
-        .card-list > *:nth-child(n+6) { animation-delay: 175ms; }
-        ::-webkit-scrollbar { display: none; }
-        input:focus { outline: none; }
-      `}</style>
-
-      {/* App shell */}
-      <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", background: "#F0F4F0" }}>
+      {/* Outer bg */}
+      <div style={{ minHeight:"100dvh", background:"var(--bg)", display:"flex", justifyContent:"center" }}>
+        {/* App shell */}
         <div style={{
-          width: "100%", maxWidth: "480px",
-          minHeight: "100dvh",
-          display: "flex", flexDirection: "column",
-          background: "#F9FAFB",
-          position: "relative",
+          width:"100%", maxWidth:480,
+          minHeight:"100dvh",
+          display:"flex", flexDirection:"column",
+          background:"var(--surface)",
+          position:"relative",
+          boxShadow:"0 0 60px rgba(0,0,0,0.08)",
         }}>
 
           {/* ── Header ── */}
           <div style={{
-            position: "sticky", top: 0, zIndex: 10,
-            background: "#F9FAFB",
-            paddingTop: "env(safe-area-inset-top, 16px)",
-            borderBottom: "1px solid #f1f5f9",
+            position:"sticky", top:0, zIndex:10,
+            background:"rgba(249,250,251,0.95)",
+            backdropFilter:"blur(12px)",
+            WebkitBackdropFilter:"blur(12px)",
+            borderBottom:"1px solid var(--border)",
+            paddingTop:"env(safe-area-inset-top, 12px)",
           }}>
-            {/* Title bar */}
-            <div style={{ padding: "16px 20px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ padding:"16px 20px 10px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontSize: "22px" }}>{activeCat?.icon}</span>
-                  <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b", letterSpacing: "-0.02em" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontSize:22 }}>{activeCat?.icon}</span>
+                  <h1 style={{ fontSize:20, fontWeight:700, color:"var(--text-primary)", letterSpacing:"-0.02em" }}>
                     {activeCat?.label}
                   </h1>
                 </div>
-                <p style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px", letterSpacing: "0.06em" }}>
+                <p style={{ fontSize:11, color:"var(--text-muted)", marginTop:2, letterSpacing:"0.06em" }}>
                   JAPAN TRAVEL PHRASES · {filtered.length} 條
                 </p>
               </div>
               <div style={{
-                width: "36px", height: "36px", borderRadius: "50%",
-                background: "linear-gradient(135deg, #86A789 0%, #5a8f5d 100%)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "18px",
+                width:38, height:38, borderRadius:"50%",
+                background:"linear-gradient(135deg, #86A789 0%, #5a8f5d 100%)",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                fontSize:20, boxShadow:"0 4px 12px rgba(134,167,137,0.35)",
               }}>🇯🇵</div>
             </div>
 
             {/* Search */}
-            <div style={{ padding: "0 20px 14px" }}>
-              <div style={{
-                background: "#fff",
-                border: "1px solid #e2e8f0",
-                borderRadius: "12px",
-                display: "flex", alignItems: "center", gap: "10px",
-                padding: "10px 14px",
-              }}>
-                <span style={{ color: "#94a3b8", fontSize: "16px" }}>🔍</span>
+            <div style={{ padding:"0 20px 14px" }}>
+              <div className="search-box">
+                <span style={{ color:"var(--text-muted)", fontSize:16 }}>🔍</span>
                 <input
-                  ref={searchRef}
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={e => setQuery(e.target.value)}
                   placeholder="搜尋短語..."
-                  style={{
-                    flex: 1, border: "none", background: "transparent",
-                    fontSize: "15px", color: "#374151",
-                    fontFamily: "inherit",
-                  }}
                 />
                 {query && (
                   <button
                     onClick={() => setQuery("")}
-                    style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "16px", lineHeight: 1 }}
+                    style={{ background:"none", border:"none", color:"var(--text-muted)", cursor:"pointer", fontSize:16, lineHeight:1 }}
                   >✕</button>
                 )}
               </div>
@@ -373,81 +449,57 @@ export default function App() {
           {/* ── List ── */}
           <div
             key={listKey}
-            className="card-list"
             style={{
-              flex: 1,
-              overflowY: "auto",
-              padding: "12px 16px",
-              display: "flex", flexDirection: "column", gap: "10px",
-              paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))",
+              flex:1,
+              overflowY:"auto",
+              padding:"12px 16px",
+              display:"flex", flexDirection:"column", gap:10,
+              paddingBottom:"calc(76px + env(safe-area-inset-bottom, 12px))",
             }}
           >
             {filtered.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "60px 20px", color: "#94a3b8" }}>
-                <p style={{ fontSize: "40px", marginBottom: "12px" }}>🔍</p>
-                <p style={{ fontSize: "15px" }}>找不到相關短語</p>
+              <div className="empty-state">
+                <p style={{ fontSize:40, marginBottom:12 }}>🔍</p>
+                <p style={{ fontSize:15 }}>找不到相關短語</p>
               </div>
-            ) : (
-              filtered.map((phrase) => (
-                <PhraseCard key={phrase.id} phrase={phrase} onOpen={setModalPhrase} />
-              ))
-            )}
+            ) : filtered.map(phrase => (
+              <PhraseCard key={phrase.id} phrase={phrase} onOpen={setModalPhrase} />
+            ))}
           </div>
 
           {/* ── Bottom Nav ── */}
           <div style={{
-            position: "fixed",
-            bottom: 0,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "100%",
-            maxWidth: "480px",
-            background: "rgba(249,250,251,0.94)",
-            backdropFilter: "blur(12px)",
-            borderTop: "1px solid #e2e8f0",
-            display: "flex",
-            paddingBottom: "env(safe-area-inset-bottom, 0px)",
-            zIndex: 20,
+            position:"fixed",
+            bottom:0,
+            left:"50%",
+            transform:"translateX(-50%)",
+            width:"100%",
+            maxWidth:480,
+            background:"rgba(249,250,251,0.96)",
+            backdropFilter:"blur(16px)",
+            WebkitBackdropFilter:"blur(16px)",
+            borderTop:"1px solid var(--border2)",
+            display:"flex",
+            paddingBottom:"env(safe-area-inset-bottom, 0px)",
+            zIndex:20,
           }}>
-            {CATEGORIES.map((cat) => {
+            {CATEGORIES.map(cat => {
               const isActive = cat.id === activeCategory;
               return (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategoryChange(cat.id)}
-                  style={{
-                    flex: 1,
-                    padding: "10px 4px 12px",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-                    transition: "transform 0.12s",
-                  }}
-                  onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.9)"; }}
-                  onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-                  onTouchStart={(e) => { e.currentTarget.style.transform = "scale(0.9)"; }}
-                  onTouchEnd={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-                >
-                  <span style={{ fontSize: "22px", lineHeight: 1 }}>{cat.icon}</span>
+                <button key={cat.id} className="nav-btn" onClick={() => handleCategoryChange(cat.id)}>
+                  <span style={{ fontSize:22, lineHeight:1 }}>{cat.icon}</span>
                   <span style={{
-                    fontSize: "10px",
+                    fontSize:10,
                     fontWeight: isActive ? 700 : 400,
-                    color: isActive ? "#86A789" : "#94a3b8",
-                    letterSpacing: "0.04em",
-                    transition: "color 0.15s",
-                  }}>
-                    {cat.label}
-                  </span>
+                    color: isActive ? "var(--accent)" : "var(--text-muted)",
+                    transition:"color 0.15s",
+                  }}>{cat.label}</span>
                   {isActive && (
                     <div style={{
-                      position: "absolute",
-                      bottom: "env(safe-area-inset-bottom, 0px)",
-                      width: "4px", height: "4px",
-                      borderRadius: "50%",
-                      background: "#86A789",
-                      marginTop: "2px",
+                      width:4, height:4, borderRadius:"50%",
+                      background:"var(--accent)",
+                      position:"absolute",
+                      bottom:"env(safe-area-inset-bottom, 4px)",
                     }} />
                   )}
                 </button>
@@ -457,10 +509,13 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── Modal ── */}
-      {modalPhrase && (
-        <FlashcardModal phrase={modalPhrase} onClose={() => setModalPhrase(null)} />
-      )}
+      {/* Modal */}
+      {modalPhrase && <FlashcardModal phrase={modalPhrase} onClose={() => setModalPhrase(null)} />}
     </>
   );
 }
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
